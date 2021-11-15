@@ -4,11 +4,20 @@ const User = require('../models/user')
 const fs = require('fs');
 
 
-router.get('/api/files', async (req, res) => {
+router.post('/api/files', async (req, res) => {
     try{
-        const users = await User.find().select('_id name')
+        const user = await User.findOne({email: req.body.email})
         // res.send(users);
-        res.status(200).json(users)
+        const userId  = await user._id
+        const dir = `./folder-apps/data/${userId}`
+        // let userFile = user.file
+        fs.readdirSync(dir).forEach(files => {
+            return userFiles = files
+        });
+
+        
+
+        res.status(200).json({user, userFiles})
 
     }catch(err){
         res.status(500).json({message: err.message || `Internal server error`})
@@ -53,7 +62,7 @@ router.post('/api/auth/register', async (req, res) => {
         });
         
         user = await user.save();
-        res.status(201).json(user) 
+        res.status(201).json({data:user}) 
     }catch(err){
         res.status(500).json({ message: err.message || `internal server error` })
     }
