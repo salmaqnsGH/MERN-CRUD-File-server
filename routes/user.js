@@ -15,7 +15,7 @@ router.get('/api/files', async (req, res) => {
     }
 });
 
-router.post('/api/register', async (req, res) => {
+router.post('/api/auth/register', async (req, res) => {
     try{
         let user = new User({ 
             name: req.body.name,
@@ -59,7 +59,7 @@ router.post('/api/register', async (req, res) => {
     }
 });
 
-router.post('/api/signin', async(req, res) => {
+router.post('/api/auth/signin', async(req, res) => {
     const {email, password} = req.body
 
     try{
@@ -68,7 +68,7 @@ router.post('/api/signin', async(req, res) => {
         }).then((user)=>{
             if(user){
                 if(user.password == req.body.password ){
-                    res.status(200).json({user})
+                    res.status(200).json({data:user})
                 }else{
                     res.status(403).json({ message: 'Password yang anda masukkan salah' }) 
                 }
