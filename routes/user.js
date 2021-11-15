@@ -60,7 +60,6 @@ router.post('/api/auth/register', async (req, res) => {
 });
 
 router.post('/api/auth/signin', async(req, res) => {
-    const {email, password} = req.body
 
     try{
         const user = await User.findOne({
@@ -68,7 +67,7 @@ router.post('/api/auth/signin', async(req, res) => {
         }).then((user)=>{
             if(user){
                 if(user.password == req.body.password ){
-                    res.status(200).json({data:user})
+                    res.status(200).json({user})
                 }else{
                     res.status(403).json({ message: 'Password yang anda masukkan salah' }) 
                 }
