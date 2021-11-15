@@ -20,6 +20,7 @@ router.post('/api/register', async (req, res) => {
         let user = new User({ 
             name: req.body.name,
             email: req.body.email,
+            password: req.body.password,
             country: req.body.country
         });
         
@@ -53,6 +54,28 @@ router.post('/api/register', async (req, res) => {
         
         user = await user.save();
         res.status(201).json(user) 
+    }catch(err){
+        res.status(500).json({ message: err.message || `internal server error` })
+    }
+});
+
+router.post('/api/signin', async(req, res) => {
+    const {email, password} = req.body
+
+    try{
+        const user = await User.findOne({
+            email: req.body.email
+        }).then((user)=>{
+            if(user){
+                if(user.password == req.body.password ){
+                    res.status(200).json({user})
+                }else{
+                    res.status(403).json({ message: 'Password yang anda masukkan salah' }) 
+                }
+            }else{
+                res.status(403).json({ message: 'Email yang anda masukkan belum terdaftar' })    
+            }
+        })
     }catch(err){
         res.status(500).json({ message: err.message || `internal server error` })
     }
