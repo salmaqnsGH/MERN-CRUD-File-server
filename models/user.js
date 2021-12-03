@@ -1,4 +1,7 @@
 const mongoose = require('mongoose');
+const bcrypt = require('bcryptjs');
+
+const HASH_ROUND = 10
 
 let userSchema = mongoose.Schema({
     name: {
@@ -20,6 +23,12 @@ let userSchema = mongoose.Schema({
         maxlength :[225, "panjang password maksimal 225 karakter"],
     },
 });
+
+//hash password on pre-save
+userSchema.pre('save', function (next){
+  this.password = bcrypt.hashSync(this.password, HASH_ROUND)
+  next()
+})
 
 userSchema.path('email').validate(async function(value){
     try{

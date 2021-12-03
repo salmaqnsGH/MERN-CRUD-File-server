@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 const userRouter = require('./routes/user');
 const express = require('express');
+const {join} = require('path');
 const app = express();
 var cors = require('cors')
 
@@ -12,6 +13,8 @@ mongoose.connect('mongodb://127.0.0.1:27017/memoora')
 
 app.use(express.json());
 app.use('/',cors(), userRouter);
+app.use('/folder-apps',express.static(join(__dirname,"/folder-apps")));
+
 
 const port = process.env.PORT || 5000;
 app.listen(port, () => console.log(`Listening on port ${port}...`));
