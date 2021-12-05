@@ -118,6 +118,8 @@ router.get('/api/files', isLogin, async (req, res) => {
 
 router.post('/api/addFile', isLogin, async (req, res) => {
     try{
+        // const user = await User.findOne({_id: req.user.id})
+        // console.log(user)
         const userId  = req.user.id
         const dir = `./folder-apps/${userId}`
         // create random file name
@@ -142,6 +144,21 @@ router.post('/api/addFile', isLogin, async (req, res) => {
     } catch (err) {
         res.status(500).json({message: err.message || `Internal server error`})
       }
+});
+
+router.delete('/api/deleteFile', isLogin, async (req, res) => {
+    const userId  = req.user.id
+    const file  = req.query.file
+    const dir = `./folder-apps/${userId}/${file}`
+    console.log(userId)
+
+    fs.unlink(dir, (err => {
+        if (err) res.status(500).json({message: err.message || `Internal server error`});
+        else {
+        console.log("\nDeleted dir: dir");
+        res.status(200).send({data: {dir}})
+        }
+    }));
 });
 
 module.exports = router; 

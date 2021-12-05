@@ -6,7 +6,6 @@ module.exports = {
         try{
             const token = req.headers.authorization ? req.headers.authorization.replace('Bearer ', '') : null
             const data = jwt.verify(token, config.jwtKey)
-            console.log("data", data)
 
             req.user = data.user
             req.token = token
