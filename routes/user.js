@@ -1,9 +1,10 @@
 const express = require('express');
+const router = express.Router();
 const axios = require('axios');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken')
-const router = express.Router();
 const User = require('../models/user')
+const UserFile = require('../models/file')
 const fs = require('fs');
 const config = require('../config')
 const {isLogin} = require('../middlewares/auth')
@@ -29,9 +30,20 @@ router.post('/api/auth/register', async (req, res, next) => {
         writeStream.write("\n");
         writeStream.write("NAME:" + req.body.name);
         writeStream.end()
+
+        const content = "EMAIL: "+ req.body.email + "\n" + "NAME: " + req.body.name
+
+        const dataUserFile = {
+            userId: userId,
+            fileName: `${fileName}.yml`,
+            content: content
+        }
+
+        const userFile = new UserFile(dataUserFile)
+        await userFile.save()
         
         delete user._doc.password //delete password output
-        res.status(201).json({ data:user }) 
+        res.status(201).json({ data:{user,userFile} }) 
 
     } catch (err) {
         if(err && err.name === "ValidationError"){
@@ -90,27 +102,8 @@ router.get('/api/countries', async (req, res) => {
 
 router.get('/api/files', isLogin, async (req, res) => {
     try{
-        const user = await User.findOne({_id: req.user.id})
-
-        if(!user) return res.status(404).json({ message: 'User not found' })
-        // res.send(users);
-        const userId  = await user._id
-        const dir = `./folder-apps/${userId}`
-        let userFiles = []
-
-        fs.readdirSync(dir).forEach(file => {
-            userFiles.push(file)
-        });
-
-        const account = {
-            _id: user._id,
-            name: user.name,
-            email: user.email,
-            country: user.country,
-        }
-
-        res.status(200).send({data: {account, userFiles}})
-
+        const data = await UserFile.find({userId: req.user.id})
+        res.status(200).send({data})
     }catch(err){
         res.status(500).json({message: err.message || `Internal server error`})
     }
@@ -118,10 +111,9 @@ router.get('/api/files', isLogin, async (req, res) => {
 
 router.post('/api/addFile', isLogin, async (req, res) => {
     try{
-        // const user = await User.findOne({_id: req.user.id})
-        // console.log(user)
         const userId  = req.user.id
         const dir = `./folder-apps/${userId}`
+
         // create random file name
         const fileName = Math.random().toString(36).substring(2);
         if (!fs.existsSync(`${dir}`)) {
@@ -133,32 +125,66 @@ router.post('/api/addFile', isLogin, async (req, res) => {
         writeStream.write(req.body.message);
         writeStream.end()
 
-        let userFiles = []
+        const content = req.body.message
 
-        fs.readdirSync(dir).forEach(files => {
-            userFiles.push(files)
-        });
+        const dataUserFile = {
+            userId: userId,
+            fileName: `${fileName}.yml`,
+            content: content
+        }
 
-        res.status(200).send({data: {userFiles}})
+        const userFile = new UserFile(dataUserFile)
+        await userFile.save()
+
+        res.status(200).send({data: {dataUserFile}})
 
     } catch (err) {
         res.status(500).json({message: err.message || `Internal server error`})
-      }
+    }
+});
+
+router.post('/api/updateFile', isLogin, async (req, res) => {
+    try{
+        const userId  = req.user.id
+        const fileName = req.body.fileName
+        const content = req.body.content
+        const userFile = await UserFile.findOne({fileName :fileName})
+        const dir = `./folder-apps/${userId}`
+
+        
+        const writeStream = fs.createWriteStream(`${dir}/${fileName}`);
+        writeStream.write(content);
+        writeStream.end()
+        
+        userFile.content = content
+        await userFile.save()
+
+        res.status(200).send({data: userFile})
+
+    } catch (err) {
+        console.log(err)
+        res.status(500).json({message: err.message || `Internal server error`})
+    }
 });
 
 router.delete('/api/deleteFile', isLogin, async (req, res) => {
-    const userId  = req.user.id
-    const file  = req.query.file
-    const dir = `./folder-apps/${userId}/${file}`
-    console.log(userId)
+    try{
+        const userId  = req.user.id
+        const file  = req.query.file
+        const dir = `./folder-apps/${userId}/${file}`
 
-    fs.unlink(dir, (err => {
-        if (err) res.status(500).json({message: err.message || `Internal server error`});
-        else {
-        console.log("\nDeleted dir: dir");
-        res.status(200).send({data: {dir}})
-        }
-    }));
+        fs.unlink(dir, (err => {
+            if (err) res.status(500).json({message: err.message || `Internal server error`});
+            else {
+            console.log("\nDeleted dir:", dir);
+            res.status(200).send({data: {dir}})
+            }
+        }));
+
+        await UserFile.deleteOne({fileName:file})
+    } catch (err) {
+        res.status(500).json({message: err.message || `Internal server error`})
+    }
 });
 
 module.exports = router; 
