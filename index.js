@@ -1,6 +1,5 @@
 const mongoose = require('mongoose');
 const userRouter = require('./routes/user');
-const scrapper = require('./routes/webscrapper');
 const express = require('express');
 const {join} = require('path');
 const app = express();
@@ -14,7 +13,6 @@ mongoose.connect('mongodb://127.0.0.1:27017/memoora')
 
 app.use(express.json());
 app.use('/',cors(), userRouter);
-app.use('/scrapper',cors(), scrapper);
 app.use('/folder-apps',express.static(join(__dirname,"/folder-apps")));
 
 
